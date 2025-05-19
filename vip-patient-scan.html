@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedAssist - VIP Medical Scan</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --primary-light: #60a5fa;
+            --primary-accent: #93c5fd;
+            --secondary: #8b5cf6;
+            --secondary-dark: #6d28d9;
+            --accent: #c084fc;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark-bg: #0f172a;
+            --dark-surface: #1e293b;
+            --dark-surface-elevated: #293548;
+            --text-primary: #f1f5f9;
+            --text-secondary: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --vip-gold: #ffd700;
+            --vip-gradient: linear-gradient(135deg, #ffd700, #ffb700);
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--dark-bg);
+            color: var(--text-primary);
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            line-height: 1.7;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+        .sidebar {
+            width: 280px;
+            background: var(--dark-surface);
+            border-right: 1px solid var(--border);
+            height: 100vh;
+            z-index: 1030;
+            position: fixed;
+            box-shadow: 5px 0 25px rgba(0, 0, 0, 0.1);
+        }
+        .sidebar .nav-link {
+            color: var(--text-secondary);
+            padding: 12px 24px;
+            border-radius: 8px;
+            margin: 4px 16px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            font-weight: 500;
+        }
+        .sidebar .nav-link::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 0;
+            height: 100%;
+            background-color: rgba(59, 130, 246, 0.1);
+            z-index: -1;
+            transition: width 0.3s ease;
+        }
+        .sidebar .nav-link:hover {
+            color: var(--primary-light);
+            transform: translateX(5px);
+        }
+        .sidebar .nav-link:hover::before {
+            width: 100%;
+        }
+        .sidebar .nav-link.active {
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--primary-light);
+            font-weight: 600;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            border-left: 3px solid var(--primary);
+        }
+        .sidebar .nav-link .bi {
+            transition: transform 0.3s ease;
+        }
+        .sidebar .nav-link:hover .bi {
+            transform: scale(1.2);
+        }
+        .settings-nav {
+            position: relative;
+        }
+        .settings-dropdown {
+            display: none;
+            position: absolute;
+            left: 16px;
+            top: 100%;
+            width: calc(100% - 32px);
+            padding: 8px 0;
+            margin-top: 8px;
+            background-color: var(--dark-surface-elevated);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            z-index: 1000;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .settings-dropdown a {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.2s;
+            border-radius: 6px;
+            margin: 0 8px;
+        }
+        .settings-dropdown a:hover {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: var(--primary-light);
+        }
+        .settings-dropdown a i {
+            margin-right: 12px;
+            font-size: 16px;
+            transition: transform 0.3s ease;
+        }
+        .settings-dropdown a:hover i {
+            transform: translateX(3px);
+        }
+        .show-dropdown {
+            display: block;
+        }
+        .chevron-icon {
+            transition: transform 0.3s ease;
+            display: inline-block;
+        }
+        .rotate-chevron {
+            transform: rotate(180deg);
+        }
+        main {
+            flex: 1;
+        }
+        .auth-warning {
+            padding: 20px;
+            border-radius: 16px;
+            background-color: rgba(245, 158, 11, 0.1);
+            border-left: 4px solid var(--warning);
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .upload-container {
+            max-width: 750px;
+            margin: 0 auto;
+            background: var(--dark-surface);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        .upload-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--vip-gradient);
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+        .upload-container:hover::before {
+            opacity: 1;
+        }
+        .upload-header {
+            padding: 1.5rem 2rem;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+            background: var(--dark-surface-elevated);
+            position: relative;
+        }
+        .upload-header h4 {
+            margin: 0;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .upload-body {
+            padding: 2.5rem 2rem;
+        }
+        .upload-area {
+            border: 2px dashed rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            padding: 3rem 1.5rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: rgba(15, 23, 42, 0.3);
+            position: relative;
+            z-index: 1;
+        }
+        .upload-area:hover {
+            border-color: var(--vip-gold);
+            background: rgba(255, 215, 0, 0.05);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        .upload-area:active {
+            transform: translateY(0);
+        }
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            color: var(--vip-gold);
+            transition: all 0.3s ease;
+        }
+        .upload-area:hover .upload-icon {
+            transform: scale(1.1);
+            color: var(--vip-gold);
+        }
+        .upload-text {
+            margin-bottom: 0.75rem;
+            font-weight: 500;
+            font-size: 1.15rem;
+            color: var(--text-primary);
+        }
+        .upload-subtext {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+        .preview-container {
+            padding: 1.5rem;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 12px;
+            margin: 1.5rem 0;
+            text-align: center;
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+        #previewImg {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+            margin: 0 auto;
+            display: none;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        .btn-action {
+            padding: 0.85rem 1.75rem;
+            border-radius: 50px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        .btn-action::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: all 0.6s ease;
+            z-index: -1;
+        }
+        .btn-action:hover::before {
+            left: 100%;
+        }
+        .btn-action:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+        }
+        .btn-action:active {
+            transform: translateY(0);
+        }
+        .btn-action i {
+            margin-right: 8px;
+            transition: transform 0.3s ease;
+        }
+        .btn-action:hover i {
+            transform: translateY(-3px);
+        }
+        .btn-vip {
+            background: var(--vip-gradient);
+            color: #000;
+            border: none;
+        }
+        .btn-vip:hover {
+            background: linear-gradient(135deg, #ffe066, #ffcc00);
+            color: #000;
+        }
+        #statusIcon {
+            padding: 1rem;
+            text-align: center;
+            font-size: 1.5rem;
+            min-height: 30px;
+        }
+        .status-processing {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .status-success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .status-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.5); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 215, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); }
+        }
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        #sidebarToggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1060;
+            background: var(--dark-surface-elevated);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+        #sidebarToggle:hover {
+            transform: scale(1.05);
+        }
+        .sidebar-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 1020;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .sidebar-backdrop.show {
+            opacity: 1;
+        }
+        .main-content {
+            transition: all 0.3s ease;
+            padding: 40px !important;
+        }
+        .vip-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--vip-gold), #ffb700);
+            color: black;
+            padding: 3px 10px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 50px;
+            margin-left: 8px;
+            vertical-align: middle;
+            box-shadow: 0 2px 8px rgba(255, 215, 0, 0.4);
+            animation: pulse 2s infinite;
+        }
+        .vip-status-indicator {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 1050;
+            display: flex;
+            align-items: center;
+            padding: 8px 15px;
+            background: linear-gradient(135deg, #ffd700 0%, #ffcc00 100%);
+            color: #000;
+            border-radius: 50px;
+            font-weight: 600;
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+            animation: pulse-gold 2s infinite;
+        }
+        .vip-status-indicator i {
+            margin-right: 8px;
+            font-size: 1.2rem;
+        }
+        @keyframes pulse-gold {
+            0% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.6); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 215, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); }
+        }
+        .dashboard-header h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            background: linear-gradient(to right, var(--vip-gold), #ffcc33);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .dashboard-header p {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+        }
+        .user-info {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            padding: 10px 16px;
+            background-color: rgba(59, 130, 246, 0.1);
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            max-width: 100%;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+        .user-info i {
+            margin-right: 8px;
+            color: var(--primary-light);
+            flex-shrink: 0;
+        }
+        .vip-features {
+            background: rgba(15, 23, 42, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border);
+        }
+        .vip-features h5 {
+            color: var(--vip-gold);
+            margin-bottom: 1rem;
+        }
+        .vip-features ul {
+            padding-left: 1.25rem;
+        }
+        .vip-features li {
+            margin-bottom: 0.75rem;
+        }
+        .vip-features li i {
+            color: var(--vip-gold);
+            margin-right: 0.5rem;
+        }
+        @media (max-width: 991.98px) {
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                box-shadow: 0 0 25px rgba(0,0,0,0.2);
+                z-index: 1040;
+            }
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            .sidebar-backdrop.show {
+                display: block;
+            }
+            #sidebarToggle {
+                display: block;
+            }
+            .main-content {
+                margin-left: 0 !important;
+                padding: 30px !important;
+                padding-top: 60px !important;
+            }
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start !important;
+            }
+            .user-info {
+                margin-top: 10px;
+                margin-bottom: 10px;
+                width: auto;
+                max-width: 100%;
+            }
+            .vip-status-indicator {
+                bottom: 15px;
+                left: 15px;
+                padding: 6px 12px;
+                font-size: 0.9rem;
+            }
+        }
+        @media (max-width: 767.98px) {
+            .upload-area {
+                padding: 2rem 1rem;
+            }
+            .upload-icon {
+                font-size: 2.5rem;
+            }
+            .btn-action {
+                padding: 0.75rem 1.5rem;
+                font-size: 0.85rem;
+            }
+            .auth-warning .d-flex {
+                flex-direction: column;
+                align-items: flex-start !important;
+            }
+            .auth-warning .btn {
+                margin-top: 1rem;
+                margin-left: 0 !important;
+            }
+            .main-content {
+                padding: 20px !important;
+                padding-top: 60px !important;
+            }
+            .user-info {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+        @media (max-width: 575.98px) {
+            .upload-header h4 {
+                font-size: 1.1rem;
+            }
+            .upload-text {
+                font-size: 1rem;
+            }
+            .upload-body {
+                padding: 1.5rem 1rem;
+            }
+            .d-flex.justify-content-center.gap-3.mt-4 {
+                flex-direction: column;
+                gap: 0.75rem !important;
+            }
+            .btn-action {
+                width: 100%;
+            }
+            .user-info {
+                text-align: center;
+                display: flex;
+                justify-content: center;
+                font-size: 0.85rem;
+            }
+            #currentDateTime {
+                font-size: 0.85rem;
+                display: inline-block;
+            }
+            .vip-status-indicator {
+                bottom: 10px;
+                left: 10px;
+                padding: 5px 10px;
+                font-size: 0.85rem;
+            }
+        }
+        .premium-modal .modal-content {
+            background-color: var(--dark-surface);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 16px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+        .premium-modal .modal-header {
+            background: var(--dark-surface-elevated);
+            border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .premium-modal .modal-header:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--vip-gradient);
+        }
+        .premium-modal .modal-title {
+            font-weight: 700;
+            color: var(--vip-gold);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .premium-modal .modal-title i {
+            font-size: 1.5rem;
+        }
+        .premium-modal .modal-body {
+            padding: 2rem 1.5rem;
+        }
+        .premium-modal .modal-footer {
+            border-top: 1px solid rgba(255, 215, 0, 0.1);
+            padding: 1.25rem;
+        }
+        .premium-plan-card {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        .premium-plan-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            border-color: rgba(255, 215, 0, 0.3);
+        }
+        .premium-benefits {
+            margin: 1.5rem 0;
+        }
+        .premium-benefits .benefit-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+        .premium-benefits .benefit-item i {
+            color: var(--vip-gold);
+            margin-right: 1rem;
+            margin-top: 0.25rem;
+            font-size: 1.1rem;
+        }
+        .premium-badge {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: var(--vip-gradient);
+            color: black;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            transform: rotate(15deg);
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+        }
+        .btn-upgrade {
+            background: var(--vip-gradient);
+            color: black;
+            border: none;
+            font-weight: 600;
+            border-radius: 50px;
+            padding: 1rem 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(255, 215, 0, 0.3);
+        }
+        .btn-upgrade:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px rgba(255, 215, 0, 0.4);
+            color: black;
+        }
+        .btn-upgrade:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: all 0.6s ease;
+            z-index: -1;
+        }
+        .btn-upgrade:hover:before {
+            left: 100%;
+        }
+        .premium-icon {
+            font-size: 2.5rem;
+            color: var(--vip-gold);
+            margin-bottom: 1rem;
+        }
+        .success-animation {
+            text-align: center;
+            padding: 2rem;
+        }
+        .checkmark {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: inline-block;
+            stroke-width: 3;
+            stroke: var(--vip-gold);
+            stroke-miterlimit: 10;
+            box-shadow: 0 0 0 var(--vip-gold);
+            animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s both;
+            position: relative;
+            margin: 0 auto 1rem;
+            background: rgba(255, 215, 0, 0.1);
+        }
+        .checkmark__circle {
+            stroke-dasharray: 166;
+            stroke-dashoffset: 166;
+            stroke-width: 3;
+            stroke-miterlimit: 10;
+            stroke: var(--vip-gold);
+            fill: none;
+            animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+        }
+        .checkmark__check {
+            transform-origin: 50% 50%;
+            stroke-dasharray: 48;
+            stroke-dashoffset: 48;
+            animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+        }
+        @keyframes stroke {
+            100% {
+                stroke-dashoffset: 0;
+            }
+        }
+        @keyframes scale {
+            0%, 100% {
+                transform: none;
+            }
+            50% {
+                transform: scale3d(1.1, 1.1, 1);
+            }
+        }
+        @keyframes fill {
+            100% {
+                box-shadow: 0 0 0 30px rgba(255, 215, 0, 0.05);
+            }
+        }
+        .golden-glow {
+            animation: goldenGlow 1s ease-in-out 1s forwards;
+        }
+        @keyframes goldenGlow {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 20px rgba(255, 215, 0, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 215, 0, 0);
+            }
+        }
+        .success-text {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--vip-gold);
+            margin-bottom: 0.5rem;
+        }
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: var(--vip-gold);
+            opacity: 0.7;
+            top: 0;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <button id="sidebarToggle" class="btn" type="button">
+        <i class="bi bi-list fs-5"></i>
+    </button>
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+    <div class="d-flex">
+        <nav class="sidebar vh-100 position-fixed" id="sidebar">
+            <div class="p-4">
+                <div class="mb-5">
+                    <h3 class="text-primary fw-bold">MedAssist</h3>
+                    <p class="text-secondary small">Your Health Partner</p>
+                </div>
+                <nav class="nav flex-column gap-2">
+                    <a class="nav-link" href="index.html">
+                        <i class="bi bi-house-door me-2"></i>
+                        Home
+                    </a>
+                    <a class="nav-link" href="patient-dashboard.html">
+                        <i class="bi bi-speedometer2 me-2"></i>
+                        Dashboard
+                    </a>
+                    <a class="nav-link" href="patient-appointments.html">
+                        <i class="bi bi-calendar2-week me-2"></i>
+                        My Appointments
+                    </a>
+                    <a class="nav-link" href="support-user-chat.html">
+                        <i class="bi bi-chat-dots me-2"></i>
+                        Support Chat
+                    </a>
+                    <a class="nav-link" href="user-medical-analysis.html">
+                        <i class="bi bi-clipboard2-pulse me-2"></i>
+                        Medical Scan
+                    </a>
+                    <a class="nav-link active" href="#">
+                        <i class="bi bi-star-fill me-2"></i>
+                        VIP Scan <span class="vip-badge">VIP</span>
+                    </a>
+                    <div class="settings-nav">
+                        <a class="nav-link" href="#" id="settingsLink">
+                            <i class="bi bi-gear me-2"></i>
+                            Settings
+                            <i class="bi bi-chevron-down float-end mt-1 chevron-icon" id="settingsChevron"></i>
+                        </a>
+                        <div class="settings-dropdown" id="settingsDropdown">
+                            <a href="javascript:void(0);" onclick="logout()">
+                                <i class="bi bi-box-arrow-right"></i>
+                                Log Out
+                            </a>
+                        </div>
+                    </div>
+                </nav>
+            </div>
+        </nav>
+        <main class="main-content flex-grow-1" style="margin-left: 280px; padding: 40px;">
+            <div id="authWarning" class="auth-warning" style="display: none;">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-exclamation-triangle-fill text-warning fs-4 me-3"></i>
+                    <div>
+                        <h6 class="mb-1">Please Log In</h6>
+                        <p class="mb-0">You need to be logged in to access VIP medical services.</p>
+                    </div>
+                    <a href="login.html" class="btn btn-warning ms-auto">Log In</a>
+                </div>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mb-4 dashboard-header">
+                <div>
+                    <h2>VIP Medical Scan</h2>
+                    <p class="mb-0">Premium analysis with priority processing</p>
+                </div>
+                <div class="user-info">
+                    <i class="bi bi-clock"></i> Current Date: <span id="currentDateTime">Loading...</span>
+                </div>
+            </div>
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="vip-features">
+                        <h5><i class="fas fa-crown"></i> VIP Benefits</h5>
+                        <ul class="mb-0">
+                            <li><i class="fas fa-check-circle"></i> Priority processing within 2 hours</li>
+                            <li><i class="fas fa-check-circle"></i> Enhanced AI models with higher accuracy</li>
+                            <li><i class="fas fa-check-circle"></i> Detailed reports with specialist recommendations</li>
+                            <li><i class="fas fa-check-circle"></i> Access to medical specialists for follow-up consultations</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="row mb-5 justify-content-center">
+                <div class="col-12">
+                    <div class="upload-container">
+                        <div class="upload-header">
+                            <h4><i class="fas fa-lungs me-2"></i> Premium Lung X-Ray Analysis</h4>
+                        </div>
+                        <div class="upload-body">
+                            <form id="uploadForm" method="post" enctype="multipart/form-data">
+                                <input type="hidden" name="email" value="">
+                                <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                                    <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                                    <h5 class="upload-text">Drop your image here</h5>
+                                    <p class="upload-subtext">or click to browse files</p>
+                                    <p class="upload-subtext mt-3">Supported formats: JPG, PNG</p>
+                                    <input type="file" id="fileInput" class="d-none" accept="image/*" onchange="previewImage()" required>
+                                </div>
+                                <div class="preview-container" id="previewContainer" style="display: none;">
+                                    <img id="previewImg" class="img-fluid" alt="Image preview">
+                                </div>
+                                <div id="statusIcon"></div>
+                                <div class="d-grid mt-4">
+                                    <button type="submit" class="btn btn-vip btn-action">
+                                        <i class="fas fa-star me-2"></i> Submit for VIP Analysis
+                                    </button>
+                                </div>
+                            </form>
+                            <div class="d-flex justify-content-center gap-3 mt-4">
+                                <button id="displayResultBtn" class="btn btn-info btn-action" style="display: none;">
+                                    <i class="fas fa-file-medical-alt me-2"></i> View VIP Results
+                                </button>
+                                <button onclick="findSpecialist()" class="btn btn-primary btn-action">
+                                    <i class="fas fa-user-md me-2"></i> Find Specialist
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+             <p>
+              Disclaimer: This is a student project prototype under active development and its results are not guaranteed to be accurate.
+              VIP Features are for demonstration purposes only.
+            </p>
+        </main>
+    </div>
+    <div class="vip-status-indicator" id="vipStatusIndicator" style="display: none;">
+        <i class="bi bi-stars"></i> VIP Patient
+    </div>
+    <div class="modal premium-modal fade" id="premiumModal" tabindex="-1" aria-labelledby="premiumModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="premiumModalLabel">
+                        <i class="fas fa-crown"></i> Premium Access Required
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="premiumModalBody">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-star-half-alt premium-icon"></i>
+                        <h4 class="mb-3">Unlock VIP Medical Services</h4>
+                        <p class="lead">Your health deserves premium care. Upgrade now to access exclusive features!</p>
+                    </div>
+                    <div class="premium-plan-card position-relative">
+                        <span class="premium-badge">BEST VALUE</span>
+                        <h5 class="text-gold">Premium Membership</h5>
+                        <p>Unlock all premium features and enjoy priority medical services.</p>
+                        <div class="premium-benefits">
+                            <div class="benefit-item">
+                                <i class="fas fa-check-circle"></i>
+                                <div>
+                                    <strong>Priority Processing</strong>
+                                    <p class="mb-0 small text-muted">Get your medical analysis results within 2 hours</p>
+                                </div>
+                            </div>
+                            <div class="benefit-item">
+                                <i class="fas fa-check-circle"></i>
+                                <div>
+                                    <strong>Enhanced AI Analysis</strong>
+                                    <p class="mb-0 small text-muted">Access to our most advanced medical AI models</p>
+                                </div>
+                            </div>
+                            <div class="benefit-item">
+                                <i class="fas fa-check-circle"></i>
+                                <div>
+                                    <strong>Specialist Recommendations</strong>
+                                    <p class="mb-0 small text-muted">Get personalized specialist referrals based on your results</p>
+                                </div>
+                            </div>
+                            <div class="benefit-item">
+                                <i class="fas fa-check-circle"></i>
+                                <div>
+                                    <strong>Unlimited VIP Scans</strong>
+                                    <p class="mb-0 small text-muted">No limits on premium medical scans</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-center mt-4">
+                            <button id="upgradeButton" class="btn btn-upgrade btn-lg">
+                                <i class="fas fa-crown me-2"></i> Upgrade Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let premiumModal;
+        function logout() {
+            localStorage.removeItem('jwtToken');
+            window.location.href = 'login.html';
+        }
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            sidebar.classList.toggle('show');
+            backdrop.classList.toggle('show');
+        }
+        function setupSettingsDropdown() {
+            const settingsLink = document.getElementById('settingsLink');
+            const settingsDropdown = document.getElementById('settingsDropdown');
+            const settingsChevron = document.getElementById('settingsChevron');
+            function toggleSettingsDropdown(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                settingsDropdown.classList.toggle('show-dropdown');
+                settingsChevron.classList.toggle('rotate-chevron');
+            }
+            settingsLink.addEventListener('click', toggleSettingsDropdown);
+            settingsLink.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                toggleSettingsDropdown(e);
+            });
+            document.addEventListener('click', function(event) {
+                if (!settingsLink.contains(event.target) && !settingsDropdown.contains(event.target)) {
+                    settingsDropdown.classList.remove('show-dropdown');
+                    settingsChevron.classList.remove('rotate-chevron');
+                }
+            });
+            document.addEventListener('touchend', function(event) {
+                if (!settingsLink.contains(event.target) && !settingsDropdown.contains(event.target)) {
+                    settingsDropdown.classList.remove('show-dropdown');
+                    settingsChevron.classList.remove('rotate-chevron');
+                }
+            });
+        }
+        function updateCurrentTime() {
+            const dateTimeElement = document.getElementById('currentDateTime');
+            if (dateTimeElement) {
+                requestAnimationFrame(() => {
+                    const now = new Date();
+                    const year = now.getFullYear();
+                    const month = String(now.getMonth() + 1).padStart(2, '0');
+                    const day = String(now.getDate()).padStart(2, '0');
+                    const hours = String(now.getHours()).padStart(2, '0');
+                    const minutes = String(now.getMinutes()).padStart(2, '0');
+                    const seconds = String(now.getSeconds()).padStart(2, '0');
+                    const formattedDateTime = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+                    dateTimeElement.textContent = formattedDateTime;
+                });
+            }
+        }
+        function checkAuthentication() {
+            const token = localStorage.getItem('jwtToken');
+            const authWarning = document.getElementById('authWarning');
+            if (!token) {
+                authWarning.style.display = 'block';
+                return false;
+            } else {
+                authWarning.style.display = 'none';
+                return true;
+            }
+        }
+        async function checkPremiumStatus() {
+            const token = localStorage.getItem('jwtToken');
+            const vipIndicator = document.getElementById('vipStatusIndicator');
+            if (!token) {
+                vipIndicator.style.display = 'none';
+                return;
+            }
+            try {
+                console.log("Checking premium status...");
+                const response = await axios.post(
+                    'https://mystudyproject-ecdrcgbmdufrbhbj.francecentral-01.azurewebsites.net/auth/chkuserpremium',
+                    {},
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+                console.log("Premium status response:", response.data);
+                if (response.data) {
+                    vipIndicator.style.display = 'flex';
+                    console.log("Premium user detected, showing VIP indicator");
+                } else {
+                    vipIndicator.style.display = 'none';
+                    console.log("Not a premium user");
+                }
+            } catch (error) {
+                console.error('Error checking premium status:', error);
+                vipIndicator.style.display = 'none';
+            }
+        }
+        function previewImage() {
+            const fileInput = document.getElementById('fileInput');
+            const previewImg = document.getElementById('previewImg');
+            const previewContainer = document.getElementById('previewContainer');
+            if (!fileInput.files.length) {
+                previewContainer.style.display = 'none';
+                return;
+            }
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                previewImg.src = e.target.result;
+                previewContainer.style.display = 'block';
+                previewImg.style.display = 'block';
+            };
+            reader.onerror = function () {
+                previewContainer.style.display = 'none';
+                alert('Invalid image file. Please select a valid image.');
+            };
+            reader.readAsDataURL(file);
+        }
+        async function processUpload() {
+            if (!checkAuthentication()) {
+                alert('You need to be logged in to access VIP medical services');
+                return;
+            }
+            const fileInput = document.getElementById('fileInput');
+            const statusIcon = document.getElementById('statusIcon');
+            const displayResultBtn = document.getElementById('displayResultBtn');
+            if (!fileInput.files.length) {
+                alert("Please select a file.");
+                return;
+            }
+            const formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+            formData.append("email", "mohamedakrame88@gmail.com");
+            const token = localStorage.getItem('jwtToken');
+            statusIcon.innerHTML = `
+                <div class="status-processing">
+                    <div class="spinner-border text-warning" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <div class="mt-2">Processing your VIP analysis...</div>
+                    <div class="mt-1 small text-muted">Your request has priority status</div>
+                </div>
+            `;
+            try {
+                const response = await axios.post(
+                    "https://mystudyproject-ecdrcgbmdufrbhbj.francecentral-01.azurewebsites.net/auth/adminuploadtouser22",
+                    formData,
+                    {
+                        headers: { authorization: `Bearer ${token}` },
+                        responseType: 'blob'
+                    }
+                );
+                if (response.status === 200) {
+                    statusIcon.innerHTML = `
+                        <div class="status-success">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            <span>VIP Analysis completed successfully!</span>
+                            <div class="mt-1 small">Your comprehensive report is ready to view</div>
+                        </div>
+                    `;
+                    const pdfBlob = new Blob([response.data], { type: "application/pdf" });
+                    const pdfUrl = URL.createObjectURL(pdfBlob);
+                    displayResultBtn.style.display = "inline-block";
+                    displayResultBtn.classList.add("pulse");
+                    displayResultBtn.onclick = function () {
+                        window.open(pdfUrl, '_blank');
+                    };
+                } else {
+                    statusIcon.innerHTML = `
+                        <div class="status-error">
+                            <i class="fas fa-exclamation-circle text-danger me-2"></i>
+                            <span>Analysis failed. Please try again.</span>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error("Error status:", error.response ? error.response.status : "Unknown");
+                if (error.response && error.response.status === 403) {
+                    statusIcon.innerHTML = `
+                        <div class="status-error">
+                            <i class="fas fa-exclamation-circle text-warning me-2"></i>
+                            <span>Premium access required for VIP services</span>
+                        </div>
+                    `;
+                    premiumModal.show();
+                } else {
+                    statusIcon.innerHTML = `
+                        <div class="status-error">
+                            <i class="fas fa-exclamation-circle text-danger me-2"></i>
+                            <span>Analysis failed. Please try again.</span>
+                        </div>
+                    `;
+                }
+            }
+        }
+        async function closeModal() {
+            premiumModal.hide();
+            setTimeout(async () => {
+                await checkPremiumStatus();
+                processUpload();
+            }, 500);
+        }
+        async function showPremiumSuccessAnimation() {
+            const modalBody = document.getElementById('premiumModalBody');
+            modalBody.innerHTML = `
+                <div class="success-animation text-center">
+                    <svg class="checkmark golden-glow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                        <circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/>
+                        <path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                    </svg>
+                    <h4 class="success-text">Congratulations!</h4>
+                    <p>You're now a premium member with VIP access!</p>
+                    <p class="mt-3">You can now enjoy all premium features including:</p>
+                    <ul class="list-unstyled mt-3">
+                        <li><i class="fas fa-check-circle text-success me-2"></i> Priority Processing</li>
+                        <li><i class="fas fa-check-circle text-success me-2"></i> Enhanced AI Analysis</li>
+                        <li><i class="fas fa-check-circle text-success me-2"></i> Specialist Recommendations</li>
+                    </ul>
+                    <button class="btn btn-primary mt-4" onclick="closeModal()">
+                        Continue to VIP Services
+                    </button>
+                </div>
+            `;
+            createConfetti();
+            await checkPremiumStatus();
+        }
+        function createConfetti() {
+            const modalContent = document.querySelector('.modal-content');
+            const colors = ['#FFD700', '#FFC107', '#FFEB3B', '#FF9800', '#FFFFFF'];
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.width = Math.random() * 8 + 6 + 'px';
+                confetti.style.height = confetti.style.width;
+                modalContent.appendChild(confetti);
+                animateConfetti(confetti);
+            }
+        }
+        function animateConfetti(el) {
+            const startPositionLeft = parseFloat(el.style.left);
+            const endPositionLeft = startPositionLeft + (Math.random() * 20 - 10);
+            const animationDuration = Math.random() * 3 + 2;
+            el.style.animation = `fall ${animationDuration}s ease-in forwards`;
+            el.style.transform = 'translateY(-100%)';
+            el.style.opacity = '1';
+            setTimeout(() => {
+                el.style.transition = `all ${animationDuration}s ease-in`;
+                el.style.left = `${endPositionLeft}%`;
+                el.style.transform = `translateY(${document.querySelector('.modal-content').clientHeight + 100}px) rotate(${Math.random() * 360}deg)`;
+                el.style.opacity = '0';
+            }, 10);
+            setTimeout(() => {
+                if (el.parentNode) {
+                    el.parentNode.removeChild(el);
+                }
+            }, animationDuration * 1000);
+        }
+        async function upgradeToPremium() {
+            const upgradeButton = document.getElementById('upgradeButton');
+            const token = localStorage.getItem('jwtToken');
+            if (!token) {
+                alert('You need to be logged in to upgrade.');
+                return;
+            }
+            upgradeButton.disabled = true;
+            upgradeButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Processing...';
+            try {
+                const response = await axios.post(
+                    "https://mystudyproject-ecdrcgbmdufrbhbj.francecentral-01.azurewebsites.net/auth/addusertopremium",
+                    {},
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`
+                        }
+                    }
+                );
+                if (response.status === 200) {
+                    await showPremiumSuccessAnimation();
+                } else {
+                    alert('An error occurred while processing your upgrade. Please try again.');
+                    upgradeButton.disabled = false;
+                    upgradeButton.innerHTML = '<i class="fas fa-crown me-2"></i> Upgrade Now';
+                }
+            } catch (error) {
+                console.error('Upgrade error:', error);
+                alert('An error occurred while processing your upgrade. Please try again.');
+                upgradeButton.disabled = false;
+                upgradeButton.innerHTML = '<i class="fas fa-crown me-2"></i> Upgrade Now';
+            }
+        }
+        function findSpecialist() {
+            const url = "https://www.google.com/maps/search/Pulmonologist+specialist";
+            window.open(url, "_blank");
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            premiumModal = new bootstrap.Modal(document.getElementById('premiumModal'), {
+                backdrop: 'static'
+            });
+            document.getElementById('upgradeButton').addEventListener('click', upgradeToPremium);
+            checkAuthentication();
+            checkPremiumStatus();
+            setupSettingsDropdown();
+            function adjustLayout() {
+                const mainContent = document.querySelector('.main-content');
+                if (window.innerWidth < 992) {
+                    mainContent.style.marginLeft = '0';
+                } else {
+                    mainContent.style.marginLeft = '280px';
+                }
+            }
+            document.getElementById('sidebarToggle').addEventListener('click', toggleSidebar);
+            document.getElementById('sidebarBackdrop').addEventListener('click', toggleSidebar);
+            document.querySelectorAll('.sidebar .nav-link:not(#settingsLink)').forEach(link => {
+                link.addEventListener('click', () => {
+                    if (window.innerWidth < 992) {
+                        toggleSidebar();
+                    }
+                });
+            });
+            window.addEventListener('resize', adjustLayout);
+            adjustLayout();
+            updateCurrentTime();
+            let timeUpdateInterval;
+            function startTimeUpdates() {
+                if (timeUpdateInterval) clearInterval(timeUpdateInterval);
+                updateCurrentTime();
+                timeUpdateInterval = setInterval(updateCurrentTime, 1000);
+            }
+            startTimeUpdates();
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    clearInterval(timeUpdateInterval);
+                } else {
+                    startTimeUpdates();
+                }
+            });
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes fall {
+                    0% { transform: translateY(-100%) rotate(0deg); opacity: 1; }
+                    100% { transform: translateY(1000px) rotate(360deg); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+            document.getElementById('uploadForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                processUpload();
+            });
+            console.log("Current Date and Time (UTC - YYYY-MM-DD HH:MM:SS formatted):", "2025-05-18 16:36:03");
+            console.log("Current User's Login:", "Helloworld208-glitch");
+        });
+    </script>
+</body>
+</html>
